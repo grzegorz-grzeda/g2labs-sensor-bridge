@@ -20,7 +20,22 @@ A small daemon that collects readings from home sensors over various radios and 
 
 BLE is passive (advertisements only, no pairing, no GATT connections), so sensor batteries are unaffected.
 
-Every device gets entities for the metrics it reports, plus diagnostic ones (battery, voltage, RSSI).
+Every device gets entities for the metrics it reports, plus diagnostic ones (battery, voltage, RSSI,
+which receiver currently serves it).
+
+## Multiple receivers
+
+You can run the bridge on several machines (e.g. a PC and the Raspberry Pi with HA) to cover the whole
+house. All instances publish to the same topics; for each sensor exactly one instance — its *receiver* —
+publishes at a time. Another instance takes the sensor over when it hears it at least `rssi_hysteresis` dB
+stronger, or when the current receiver has been silent for `takeover_after` seconds (machine down, sensor
+out of range). No central coordinator, the broker is the shared state.
+
+Requirements: same `base_topic` and same `[devices.names]` everywhere, unique `instance` / `client_id`
+per machine (both default to the hostname). Each instance appears in HA as a *Sensor bridge &lt;instance&gt;*
+device with a connectivity entity.
+
+Clocks must be roughly in sync (NTP) — takeover timing uses timestamps from the state payload.
 
 ## Install (Linux, systemd)
 
@@ -43,6 +58,25 @@ journalctl -u sensor-bridge -f
 
 Requires Python ≥ 3.11. BLE on Linux goes through BlueZ/D-Bus (the `bluetooth` group is enough on Debian/Ubuntu);
 bleak also works on Windows and macOS. For `rtl433` install `rtl-433` (e.g. `apt install rtl-433`).
+
+## Install (Docker, e.g. Raspberry Pi next to Home Assistant)
+
+Add the service from [`docker-compose.example.yml`](docker-compose.example.yml) to your compose file, then:
+
+```bash
+mkdir -p sensor-bridge
+curl -fsSL https://raw.githubusercontent.com/grzegorz-grzeda/g2labs-sensor-bridge/main/config.example.toml \
+  -o sensor-bridge/config.toml
+nano sensor-bridge/config.toml        # host = "mosquitto", credentials, names
+docker compose up -d --build sensor-bridge
+docker logs -f sensor-bridge
+```
+
+The container uses the host's Bluetooth through BlueZ (`/run/dbus` mounted read-only), so `bluetoothd`
+must be running on the host. To update: `docker compose build --pull sensor-bridge && docker compose up -d sensor-bridge`.
+
+On a Pi 4 the on-board Bluetooth shares the chip/antenna with Wi-Fi; continuous scanning can degrade
+Wi-Fi, which does not matter if the Pi is on Ethernet.
 
 ## MQTT broker next to Home Assistant (Docker)
 
@@ -81,11 +115,14 @@ Then in HA: *Settings → Devices & services → Add integration → MQTT*.
 
 | Topic | Payload |
 |---|---|
-| `sensor-bridge/status` | `online` / `offline` (LWT, retained) |
-| `sensor-bridge/<device_id>/state` | `{"temperature":23.4,"humidity":45,"battery":87,"voltage":2.95,"rssi":-71}` |
-| `homeassistant/sensor/<device_id>/<metric>/config` | discovery (retained) |
+| `sensor-bridge/bridge/<instance>/status` | `online` / `offline` (LWT of one bridge, retained) |
+| `sensor-bridge/<device_id>/state` | `{"temperature":23.4,"humidity":45,"battery":87,"voltage":2.95,"rssi":-71,"receiver":"g2labs_rpi","ts":1793660520.1}` |
+| `homeassistant/sensor/<device_id>/<metric>/config` | sensor discovery (retained) |
+| `homeassistant/binary_sensor/sensor_bridge_<instance>/connectivity/config` | bridge discovery (retained) |
 
-Discovery is re-sent when HA publishes `online` on `homeassistant/status`.
+Discovery is re-sent when HA publishes `online` on `homeassistant/status`. Sensor entities have no
+bridge-level availability (several bridges may serve them); they become *unavailable* via `expire_after`
+when no bridge hears them.
 
 To remove a device from HA, clear its retained discovery topics:
 `mosquitto_pub -r -n -t homeassistant/sensor/<device_id>/<metric>/config` for each metric.

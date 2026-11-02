@@ -19,7 +19,19 @@ typically runs on a different Linux machine that has the radios.
   fan-out to sinks. `run(cfg)` wires everything and handles SIGINT/SIGTERM.
 - `sinks/` – consumers. `Sink.publish(Reading)` is called on the asyncio loop and must not block.
   - `mqtt_ha.py` – paho-mqtt (own network thread), HA discovery per (device_id, metric) on first sight,
-    state as one JSON per device, LWT availability, re-announce on `homeassistant/status: online`.
+    state as one JSON per device (+ `receiver`, `ts`), per-instance LWT + bridge connectivity entity,
+    re-announce on `homeassistant/status: online`.
+  - `arbitration.py` – multi-receiver logic (pure): each instance subscribes to `<base>/+/state`; the last
+    publisher is the device's owner; others take over on `rssi_hysteresis` dB better signal or after
+    `takeover_after` s of owner silence.
+
+## Multi-instance invariants
+
+- Sensor discovery payloads must be **identical on every instance** (no instance name, version or
+  per-bridge availability in them) – otherwise HA flips config between bridges. Tested in `test_mqtt_sink.py`.
+- `instance` (default hostname) and `client_id` (default `sensor-bridge-<instance>`) must be unique per machine.
+- Deploy targets: systemd on a PC, Docker container on the Raspberry Pi next to HA (`Dockerfile`,
+  `docker-compose.example.yml`, BLE via mounted `/run/dbus`).
 
 ## Conventions
 
@@ -40,4 +52,4 @@ Hardware verification is manual: run `sensor-bridge -c config.toml -v` and watch
 - BTHome v2 decoder (pvvx firmware can advertise BTHome; also many other DIY sensors).
 - `binary_sensor` support (e.g. rtl_433 `battery_ok`, door/window contacts) – needs a component field in `Metric`.
 - Other sinks (InfluxDB, HTTP to own API on VPS).
-- Docker image.
+- Multi-arch image published to GHCR (now built locally from the git URL).

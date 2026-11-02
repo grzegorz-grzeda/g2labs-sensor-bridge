@@ -23,15 +23,21 @@ port = 1883
 username = "sensor-bridge"
 password = "change-me"
 # tls = true
-client_id = "sensor-bridge"
-base_topic = "sensor-bridge"
+# instance = "pc"             # bridge name, default: hostname. Must be unique per machine.
+# client_id = ...             # default: "sensor-bridge-<instance>". Must be unique per machine!
+base_topic = "sensor-bridge"  # same on all instances
 discovery_prefix = "homeassistant"
 expire_after = 900            # [s] entity becomes "unavailable" after this much silence
+
+# Multiple receivers (e.g. PC + Raspberry Pi): each sensor is published by one instance at a time.
+takeover_after = 300          # [s] take a sensor over when its current receiver is silent this long
+rssi_hysteresis = 6           # [dB] or when we hear it this much stronger than the current receiver
 
 # ---------------------------------------------------------------- devices
 [devices]
 min_interval = 30             # [s] max one publish per device per this period
 
+# Keep [devices.names] identical on all instances - names go into HA discovery.
 [devices.names]
 # key: device_id or alias (BLE: MAC, rtl_433: "model/id[/channel]")
 "A4:C1:38:00:00:01" = "Salon"

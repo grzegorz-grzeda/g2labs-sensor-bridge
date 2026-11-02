@@ -1,0 +1,12 @@
+# Add this service next to homeassistant + mosquitto in your docker-compose.yml.
+# In ./sensor-bridge/config.toml use  host = "mosquitto"  (compose service name).
+services:
+  sensor-bridge:
+    build: https://github.com/grzegorz-grzeda/g2labs-sensor-bridge.git#main
+    container_name: sensor-bridge
+    restart: unless-stopped
+    depends_on: [mosquitto]
+    volumes:
+      - ./sensor-bridge:/config:ro
+      - /run/dbus:/run/dbus:ro          # host BlueZ (BLE)
+    # devices: ["/dev/bus/usb:/dev/bus/usb"]   # RTL-SDR, if the rtl433 source is used (needs rtl_433 in the image)
