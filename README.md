@@ -99,3 +99,7 @@ pytest
 ```
 
 See [CLAUDE.md](CLAUDE.md) for architecture and how to add a new source / decoder / sink.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
