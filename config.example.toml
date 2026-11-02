@@ -12,7 +12,7 @@ only_named = false            # true = ignore devices not listed in [devices.nam
 [[sources]]
 type = "rtl433"               # EXPERIMENTAL, needs rtl_433 + RTL-SDR dongle
 enabled = false
-command = ["rtl_433", "-F", "json", "-M", "level"]
+command = ["rtl_433", "-C", "si", "-F", "json", "-M", "level"]
 only_named = true             # 433 MHz is full of neighbours' sensors
 
 # ---------------------------------------------------------------- sinks

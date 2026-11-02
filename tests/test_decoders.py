@@ -65,3 +65,8 @@ def test_router_only_named_matches_mac_case_insensitive():
     assert rt.accept(r, now=0)
     other = decode_181a(bytes(6) + struct.pack(">hBBHB", 1, 1, 1, 1, 1))
     assert not rt.accept(other, now=0)
+
+
+def test_rtl433_wind_m_s_converted():
+    r = parse_event({"model": "Nexus-TH", "id": 7, "temperature_C": 5.0, "wind_avg_m_s": 2.5})
+    assert r.values["wind_speed"] == 9.0

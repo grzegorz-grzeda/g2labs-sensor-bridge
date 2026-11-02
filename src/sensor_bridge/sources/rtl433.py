@@ -21,6 +21,7 @@ FIELD_MAP = {
     "humidity": ("humidity", float),
     "pressure_hPa": ("pressure", float),
     "wind_avg_km_h": ("wind_speed", float),
+    "wind_avg_m_s": ("wind_speed", lambda v: round(float(v) * 3.6, 1)),
     "rain_mm": ("rain", float),
     "rssi": ("rssi", float),
 }
@@ -58,7 +59,7 @@ class Rtl433Source(Source):
 
     def __init__(self, cfg: dict):
         super().__init__(cfg)
-        self.command = cfg.get("command", ["rtl_433", "-F", "json", "-M", "level"])
+        self.command = cfg.get("command", ["rtl_433", "-C", "si", "-F", "json", "-M", "level"])
 
     async def run(self, emit: Emit, stop: asyncio.Event) -> None:
         backoff = 1
