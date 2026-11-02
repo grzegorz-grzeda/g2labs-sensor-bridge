@@ -4,6 +4,7 @@ services:
   sensor-bridge:
     build: https://github.com/grzegorz-grzeda/g2labs-sensor-bridge.git#main
     container_name: sensor-bridge
+    hostname: g2labs-rpi                # instance name; without it the container ID (changes on rebuild) is used
     restart: unless-stopped
     depends_on: [mosquitto]
     volumes:

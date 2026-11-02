@@ -23,7 +23,8 @@ port = 1883
 username = "sensor-bridge"
 password = "change-me"
 # tls = true
-# instance = "pc"             # bridge name, default: hostname. Must be unique per machine.
+# instance = "pc"             # bridge name, default: hostname. Must be unique per machine and STABLE
+                              # (in Docker set it here or via compose `hostname:`, the container ID changes).
 # client_id = ...             # default: "sensor-bridge-<instance>". Must be unique per machine!
 base_topic = "sensor-bridge"  # same on all instances
 discovery_prefix = "homeassistant"
