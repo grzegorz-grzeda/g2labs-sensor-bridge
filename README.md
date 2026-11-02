@@ -27,7 +27,7 @@ Every device gets entities for the metrics it reports, plus diagnostic ones (bat
 ```bash
 sudo useradd -r -s /usr/sbin/nologin sensor-bridge
 sudo python3 -m venv /opt/sensor-bridge/venv
-sudo /opt/sensor-bridge/venv/bin/pip install "git+https://github.com/grzegorz-grzeda/g2labs-sensor-bridge#egg=g2labs-sensor-bridge[ble]"
+sudo /opt/sensor-bridge/venv/bin/pip install "g2labs-sensor-bridge[ble] @ git+https://github.com/grzegorz-grzeda/g2labs-sensor-bridge"
 
 sudo install -d /etc/sensor-bridge
 sudo install -m 640 -g sensor-bridge config.example.toml /etc/sensor-bridge/config.toml
