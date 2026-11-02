@@ -12,6 +12,6 @@ SOURCES = {
 }
 
 
-def create(cfg: dict) -> Source:
+def create(cfg: dict, names: dict[str, str] | None = None) -> Source:
     mod, cls = SOURCES[cfg["type"]].split(":")
-    return getattr(importlib.import_module(mod), cls)(cfg)
+    return getattr(importlib.import_module(mod), cls)(cfg, names)

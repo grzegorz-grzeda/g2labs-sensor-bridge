@@ -55,12 +55,13 @@ class Router:
 
 async def run(cfg: dict) -> None:
     router = Router(cfg)
+    raw_names = cfg.get("devices", {}).get("names", {})
     router.sinks = [sinks_mod.create(c, router.names) for c in cfg.get("sinks", [])]
     srcs = []
     for c in cfg.get("sources", []):
         if not c.get("enabled", True):
             continue
-        s = sources_mod.create(c)
+        s = sources_mod.create(c, raw_names)
         router.only_named[s.type] = router.only_named.get(s.type, False) or c.get("only_named", False)
         srcs.append(s)
     if not srcs or not router.sinks:

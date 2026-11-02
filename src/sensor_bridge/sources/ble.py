@@ -17,8 +17,8 @@ log = logging.getLogger(__name__)
 class BleSource(Source):
     type = "ble"
 
-    def __init__(self, cfg: dict):
-        super().__init__(cfg)
+    def __init__(self, cfg: dict, names: dict[str, str] | None = None):
+        super().__init__(cfg, names)
         wanted = cfg.get("decoders", list(BLE_DECODERS))
         self.decoders = [BLE_DECODERS[d] for d in wanted]
         self.adapter = cfg.get("adapter")

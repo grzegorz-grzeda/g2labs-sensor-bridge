@@ -1,6 +1,7 @@
 """433/868 MHz sensors via rtl_433 (RTL-SDR dongle). EXPERIMENTAL - not yet tested on hardware.
 
 Runs `rtl_433 -F json` as a subprocess and maps its JSON fields onto METRICS.
+Sensors with a random id per battery change can be followed with learn mode, see rtl433_learn.py.
 """
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ import re
 
 from ..model import Reading
 from .base import Emit, Source
+from .rtl433_learn import Learner
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ def _slug(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", s.lower()).strip("_")
 
 
-def parse_event(ev: dict) -> Reading | None:
+def parse_event(ev: dict, learner: Learner | None = None) -> Reading | None:
     model = ev.get("model")
     if not model or "id" not in ev:
         return None
@@ -41,8 +43,21 @@ def parse_event(ev: dict) -> Reading | None:
             values[key] = conv(ev[field])
     if not set(values) - {"rssi"}:
         return None
-    ident = f"{ev['id']}" + (f"_ch{ev['channel']}" if "channel" in ev else "")
-    alias = f"{model}/{ev['id']}" + (f"/{ev['channel']}" if "channel" in ev else "")
+    channel = str(ev["channel"]) if "channel" in ev else None
+    ident = f"{ev['id']}" + (f"_ch{channel}" if channel is not None else "")
+    alias = f"{model}/{ev['id']}" + (f"/{channel}" if channel is not None else "")
+
+    slot = learner.match(model, str(ev["id"]), channel) if learner else None
+    if slot is not None:
+        return Reading(
+            source="rtl433",
+            device_id=slot.device_id,  # stable across id changes
+            values=values,
+            model=model,
+            manufacturer=model.split("-")[0],
+            default_name=f"{model} ch{channel}" if channel is not None else model,
+            aliases=(slot.key, alias),
+        )
     return Reading(
         source="rtl433",
         device_id=f"rtl433_{_slug(model)}_{_slug(ident)}",
@@ -57,9 +72,16 @@ def parse_event(ev: dict) -> Reading | None:
 class Rtl433Source(Source):
     type = "rtl433"
 
-    def __init__(self, cfg: dict):
-        super().__init__(cfg)
+    def __init__(self, cfg: dict, names: dict[str, str] | None = None):
+        super().__init__(cfg, names)
         self.command = cfg.get("command", ["rtl_433", "-C", "si", "-F", "json", "-M", "level"])
+        self.learner = Learner(
+            self.names,
+            relearn_after=float(cfg.get("relearn_after", 300)),
+            state_file=cfg.get("state_file", "/var/lib/sensor-bridge/rtl433_bindings.json"),
+        )
+        for s in self.learner.slots:
+            log.info("[%s] learn slot %s -> %s (bound id: %s)", self.name, s.key, s.device_id, s.bound_id or "none yet")
 
     async def run(self, emit: Emit, stop: asyncio.Event) -> None:
         backoff = 1
@@ -83,7 +105,7 @@ class Rtl433Source(Source):
                     if not line:
                         break  # process exited
                     try:
-                        r = parse_event(json.loads(line))
+                        r = parse_event(json.loads(line), self.learner or None)
                     except (ValueError, TypeError):
                         continue
                     if r:

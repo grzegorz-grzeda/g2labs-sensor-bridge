@@ -17,6 +17,8 @@ ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
 ReadOnlyPaths=/etc/sensor-bridge
+# /var/lib/sensor-bridge, writable (rtl_433 learn-mode bindings)
+StateDirectory=sensor-bridge
 
 [Install]
 WantedBy=multi-user.target

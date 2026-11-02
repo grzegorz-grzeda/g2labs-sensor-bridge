@@ -10,4 +10,5 @@ services:
     volumes:
       - ./sensor-bridge:/config:ro
       - /run/dbus:/run/dbus:ro          # host BlueZ (BLE)
+      - ./sensor-bridge/state:/var/lib/sensor-bridge   # persistent state (rtl_433 learned bindings)
     # devices: ["/dev/bus/usb:/dev/bus/usb"]   # RTL-SDR, if the rtl433 source is used (needs rtl_433 in the image)

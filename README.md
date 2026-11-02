@@ -18,6 +18,12 @@ A small daemon that collects readings from home sensors over various radios and 
 | `ble` / decoder `atc` | Xiaomi LYWSD03MMC with **ATC1441** or **pvvx (custom)** firmware | ✅ |
 | `rtl433` | anything [rtl_433](https://github.com/merbanan/rtl_433) decodes that reports temperature / humidity / pressure / wind / rain | 🧪 experimental |
 
+Many cheap 433 MHz transmitters pick a new random id on every battery change. Name them as
+`"Model/*/channel"` in `[devices.names]` and the bridge pairs with the first id heard on that channel,
+then follows the new id after the old one has been silent for `relearn_after` seconds – the same thing
+the original station console does. The HA entity stays the same. Bindings are kept in
+`/var/lib/sensor-bridge/rtl433_bindings.json`; delete an entry there to force re-pairing.
+
 BLE is passive (advertisements only, no pairing, no GATT connections), so sensor batteries are unaffected.
 
 Every device gets entities for the metrics it reports, plus diagnostic ones (battery, voltage, RSSI,

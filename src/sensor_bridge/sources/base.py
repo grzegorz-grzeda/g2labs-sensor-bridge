@@ -13,8 +13,9 @@ class Source(ABC):
     """A producer of Readings. `run` must return when `stop` is set."""
     type: str = ""
 
-    def __init__(self, cfg: dict):
+    def __init__(self, cfg: dict, names: dict[str, str] | None = None):
         self.cfg = cfg
+        self.names = names or {}  # [devices.names] from config (key -> display name)
         self.name = cfg.get("name", self.type)
 
     @abstractmethod
