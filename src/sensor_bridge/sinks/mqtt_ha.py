@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 import paho.mqtt.client as mqtt
 
@@ -33,17 +34,28 @@ class MqttHaSink(Sink):
         self.client.will_set(self.avail, "offline", qos=1, retain=True)
         self.client.on_connect = self._on_connect
         self.client.on_message = self._on_message
+        self.client.on_connect_fail = self._on_connect_fail
+        self.client.on_disconnect = self._on_disconnect
         self.client.reconnect_delay_set(1, 60)
+        self._last_drop_warn = float("-inf")
+        self._dropped = 0
 
     # paho network thread
     def _on_connect(self, client, _ud, _flags, rc, _props=None):
-        if rc != 0:
-            log.error("MQTT connect failed: %s", rc)
+        if getattr(rc, "is_failure", rc != 0):
+            log.error("MQTT broker %s:%s refused connection: %s", self.host, self.port, rc)
             return
         log.info("MQTT connected to %s:%s", self.host, self.port)
         client.publish(self.avail, "online", qos=1, retain=True)
         client.subscribe(f"{self.disc}/status")
         self.announced.clear()
+
+    def _on_connect_fail(self, _client, _ud):
+        log.warning("MQTT broker %s:%s unreachable, retrying (up to every 60 s)", self.host, self.port)
+
+    def _on_disconnect(self, _client, _ud, _flags, rc, _props=None):
+        if getattr(rc, "is_failure", rc != 0):
+            log.warning("MQTT disconnected: %s", rc)
 
     def _on_message(self, _client, _ud, msg):
         if msg.topic == f"{self.disc}/status" and msg.payload == b"online":
@@ -93,6 +105,11 @@ class MqttHaSink(Sink):
 
     def publish(self, r: Reading) -> None:
         if not self.client.is_connected():
+            self._dropped += 1
+            now = time.monotonic()
+            if now - self._last_drop_warn >= 60:
+                log.warning("MQTT not connected - dropped %d reading(s) so far", self._dropped)
+                self._last_drop_warn = now
             return
         for key in r.values:
             if (r.device_id, key) not in self.announced:
