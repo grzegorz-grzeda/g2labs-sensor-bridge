@@ -1,0 +1,39 @@
+# g2labs-sensor-bridge  ->  /etc/sensor-bridge/config.toml
+log_level = "INFO"
+
+# ---------------------------------------------------------------- sources
+[[sources]]
+type = "ble"
+# adapter = "hci0"            # Linux: which BT adapter
+decoders = ["atc"]            # see src/sensor_bridge/sources/decoders
+restart_scan_every = 600      # [s] periodic scanner restart (BlueZ can stall); 0 = never
+only_named = false            # true = ignore devices not listed in [devices.names]
+
+[[sources]]
+type = "rtl433"               # EXPERIMENTAL, needs rtl_433 + RTL-SDR dongle
+enabled = false
+command = ["rtl_433", "-F", "json", "-M", "level"]
+only_named = true             # 433 MHz is full of neighbours' sensors
+
+# ---------------------------------------------------------------- sinks
+[[sinks]]
+type = "mqtt_ha"
+host = "g2labs-rpi"
+port = 1883
+username = "sensor-bridge"
+password = "change-me"
+# tls = true
+client_id = "sensor-bridge"
+base_topic = "sensor-bridge"
+discovery_prefix = "homeassistant"
+expire_after = 900            # [s] entity becomes "unavailable" after this much silence
+
+# ---------------------------------------------------------------- devices
+[devices]
+min_interval = 30             # [s] max one publish per device per this period
+
+[devices.names]
+# key: device_id or alias (BLE: MAC, rtl_433: "model/id[/channel]")
+"A4:C1:38:00:00:01" = "Salon"
+"A4:C1:38:00:00:02" = "Sypialnia"
+# "Acurite-Tower/12345/A" = "Balkon"

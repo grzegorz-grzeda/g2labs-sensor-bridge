@@ -1,0 +1,22 @@
+[Unit]
+Description=g2labs-sensor-bridge (home sensors -> Home Assistant via MQTT)
+After=bluetooth.target network-online.target
+Wants=bluetooth.target network-online.target
+
+[Service]
+Type=simple
+User=sensor-bridge
+# bluetooth: BlueZ over D-Bus; plugdev: RTL-SDR USB access (rtl-sdr udev rules)
+SupplementaryGroups=bluetooth plugdev
+ExecStart=/opt/sensor-bridge/venv/bin/sensor-bridge -c /etc/sensor-bridge/config.toml
+Restart=always
+RestartSec=10
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/etc/sensor-bridge
+
+[Install]
+WantedBy=multi-user.target
