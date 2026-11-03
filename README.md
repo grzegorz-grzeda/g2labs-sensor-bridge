@@ -79,6 +79,10 @@ docker compose up -d --build sensor-bridge
 docker logs -f sensor-bridge
 ```
 
+For the `rtl433` source plug an RTL-SDR dongle into the host, blacklist the kernel DVB-T driver
+(`echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl-sdr.conf`, then re-plug
+or reboot) and keep the `devices: /dev/bus/usb` mapping; `rtl_433` itself is part of the image.
+
 The container uses the host's Bluetooth through BlueZ (`/run/dbus` mounted read-only), so `bluetoothd`
 must be running on the host. To update: `docker compose build --pull sensor-bridge && docker compose up -d sensor-bridge`.
 

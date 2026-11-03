@@ -1,8 +1,9 @@
 FROM python:3.12-slim
 
-# build tools only as a fallback if a dependency has no wheel for this arch (e.g. armv7)
+# rtl-433: decoder for the rtl433 source (RTL-SDR dongle passed in via /dev/bus/usb)
+# gcc/libc6-dev: only a fallback if a Python dependency has no wheel for this arch; removed below
 RUN apt-get update \
- && apt-get install -y --no-install-recommends gcc libc6-dev \
+ && apt-get install -y --no-install-recommends rtl-433 gcc libc6-dev \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

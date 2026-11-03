@@ -11,4 +11,7 @@ services:
       - ./sensor-bridge:/config:ro
       - /run/dbus:/run/dbus:ro          # host BlueZ (BLE)
       - ./sensor-bridge/state:/var/lib/sensor-bridge   # persistent state (rtl_433 learned bindings)
-    # devices: ["/dev/bus/usb:/dev/bus/usb"]   # RTL-SDR, if the rtl433 source is used (needs rtl_433 in the image)
+    # RTL-SDR dongle for the rtl433 source. On the host blacklist the DVB-T driver first:
+    #   echo 'blacklist dvb_usb_rtl28xxu' | sudo tee /etc/modprobe.d/blacklist-rtl-sdr.conf
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
