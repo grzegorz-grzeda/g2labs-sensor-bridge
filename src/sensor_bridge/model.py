@@ -13,6 +13,7 @@ class Metric:
     state_class: str | None = "measurement"
     entity_category: str | None = None  # None | "diagnostic"
     precision: int | None = None
+    icon: str | None = None
 
 
 # Catalogue of known measurement keys. Sources must only emit keys from here;
@@ -28,6 +29,12 @@ METRICS: dict[str, Metric] = {
     "battery": Metric("Battery", "battery", "%", entity_category="diagnostic", precision=0),
     "voltage": Metric("Battery voltage", "voltage", "V", entity_category="diagnostic", precision=3),
     "rssi": Metric("Signal strength", "signal_strength", "dBm", entity_category="diagnostic", precision=0),
+    # host metrics (source "system")
+    "cpu_temperature": Metric("CPU temperature", "temperature", "°C", precision=1),
+    "cpu_usage": Metric("CPU usage", None, "%", precision=0, icon="mdi:cpu-64-bit"),
+    "memory_usage": Metric("Memory usage", None, "%", precision=0, icon="mdi:memory"),
+    "memory_used": Metric("Memory used", "data_size", "MiB", precision=0),
+    "disk_usage": Metric("Disk usage", None, "%", precision=0, icon="mdi:harddisk"),
 }
 
 

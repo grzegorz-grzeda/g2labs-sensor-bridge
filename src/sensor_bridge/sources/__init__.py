@@ -9,6 +9,7 @@ from .base import Source
 SOURCES = {
     "ble": "sensor_bridge.sources.ble:BleSource",
     "rtl433": "sensor_bridge.sources.rtl433:Rtl433Source",
+    "system": "sensor_bridge.sources.system:SystemSource",
 }
 
 

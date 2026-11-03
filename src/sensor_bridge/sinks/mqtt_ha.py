@@ -148,6 +148,7 @@ class MqttHaSink(Sink):
                 "state_class": m.state_class,
                 "entity_category": m.entity_category,
                 "suggested_display_precision": m.precision,
+                "icon": m.icon,
             }
         conf.update({
             "expire_after": self.expire_after,

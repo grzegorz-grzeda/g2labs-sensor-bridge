@@ -16,6 +16,7 @@ A small daemon that collects readings from home sensors over various radios and 
 | Source | Device | Status |
 |---|---|---|
 | `ble` / decoder `atc` | Xiaomi LYWSD03MMC with **ATC1441** or **pvvx (custom)** firmware | ✅ |
+| `system` | the machine the bridge runs on: CPU temperature, CPU usage, memory, disk usage | ✅ |
 | `rtl433` | anything [rtl_433](https://github.com/merbanan/rtl_433) decodes that reports temperature / humidity / pressure / wind / rain | 🧪 experimental |
 
 Many cheap 433 MHz transmitters pick a new random id on every battery change. Name them as
@@ -48,7 +49,7 @@ Clocks must be roughly in sync (NTP) — takeover timing uses timestamps from th
 ```bash
 sudo useradd -r -s /usr/sbin/nologin sensor-bridge
 sudo python3 -m venv /opt/sensor-bridge/venv
-sudo /opt/sensor-bridge/venv/bin/pip install "g2labs-sensor-bridge[ble] @ git+https://github.com/grzegorz-grzeda/g2labs-sensor-bridge"
+sudo /opt/sensor-bridge/venv/bin/pip install "g2labs-sensor-bridge[ble,system] @ git+https://github.com/grzegorz-grzeda/g2labs-sensor-bridge"
 
 sudo install -d /etc/sensor-bridge
 sudo install -m 640 -g sensor-bridge config.example.toml /etc/sensor-bridge/config.toml
@@ -137,7 +138,7 @@ To remove a device from HA, clear its retained discovery topics:
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
-pip install -e ".[ble,dev]"
+pip install -e ".[ble,system,dev]"
 pytest
 ```
 

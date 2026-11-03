@@ -17,6 +17,13 @@ only_named = true             # 433 MHz is full of neighbours' sensors
 relearn_after = 300           # [s] learn mode: follow a new id after the bound one is silent this long
 state_file = "/var/lib/sensor-bridge/rtl433_bindings.json"   # learned id bindings
 
+[[sources]]
+type = "system"               # this machine: CPU temperature/usage, memory, disk  (needs extra [system])
+interval = 60                 # [s]
+# hostname = "g2labs-rpi"     # device name/id in HA, default: hostname
+# disk_path = "/"
+# temperature_sensor = "coretemp"   # psutil sensors_temperatures() key, default: auto
+
 # ---------------------------------------------------------------- sinks
 [[sinks]]
 type = "mqtt_ha"

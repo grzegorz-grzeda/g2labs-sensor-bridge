@@ -18,6 +18,8 @@ typically runs on a different Linux machine that has the radios.
   - `rtl433_learn.py` – learn mode for ids re-randomised on battery change: `"Model/*/ch"` names keys are
     slots with stable device_id `rtl433_<model>_ch<ch>`; bound id persisted in `state_file`. Sources get
     the raw `[devices.names]` dict as their second constructor argument.
+  - `system.py` – host metrics of the machine running the bridge via psutil (extra `[system]`),
+    device `host_<hostname>`; psutil injectable for tests.
 - `core.py` – `Router`: `only_named` filter per source type, de-dup by frame counter, `min_interval` throttle,
   fan-out to sinks. `run(cfg)` wires everything and handles SIGINT/SIGTERM.
 - `sinks/` – consumers. `Sink.publish(Reading)` is called on the asyncio loop and must not block.
@@ -48,7 +50,7 @@ typically runs on a different Linux machine that has the radios.
 
 ## Testing
 
-`pip install -e ".[ble,dev]" && pytest`. Tests must not need a radio or a broker.
+`pip install -e ".[ble,system,dev]" && pytest`. Tests must not need a radio or a broker.
 Hardware verification is manual: run `sensor-bridge -c config.toml -v` and watch the logs.
 
 ## Ideas / roadmap

@@ -8,7 +8,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-RUN pip install --no-cache-dir ".[ble]" \
+RUN pip install --no-cache-dir ".[ble,system]" \
  && apt-get purge -y gcc libc6-dev && apt-get autoremove -y
 
 # BLE needs the host's BlueZ over D-Bus: mount /run/dbus (see docker-compose.example.yml).

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "g2labs-sensor-bridge"
-version = "0.3.0"
+version = "0.4.0"
 description = "Bridge home sensors (BLE, SDR/rtl_433, ...) to Home Assistant via MQTT discovery"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,6 +14,7 @@ dependencies = ["paho-mqtt>=2.0"]
 
 [project.optional-dependencies]
 ble = ["bleak>=0.22"]
+system = ["psutil>=5.9"]
 dev = ["pytest>=8"]
 
 [project.scripts]
