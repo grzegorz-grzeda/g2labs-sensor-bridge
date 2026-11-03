@@ -70,3 +70,22 @@ def test_router_only_named_matches_mac_case_insensitive():
 def test_rtl433_wind_m_s_converted():
     r = parse_event({"model": "Nexus-TH", "id": 7, "temperature_C": 5.0, "wind_avg_m_s": 2.5})
     assert r.values["wind_speed"] == 9.0
+
+
+def test_bresser_6in1_alternating_frames_are_merged():
+    from sensor_bridge.sources.rtl433 import FrameMerger
+    t = [0.0]
+    m = FrameMerger(max_age=900, clock=lambda: t[0])
+    a = parse_event({"model": "Bresser-6in1", "id": 0x1234ABCD, "channel": 0, "temperature_C": 7.1,
+                     "humidity": 81, "battery_ok": 1, "rssi": -9.0})
+    b = parse_event({"model": "Bresser-6in1", "id": 0x1234ABCD, "channel": 0, "wind_max_m_s": 5.0,
+                     "wind_avg_m_s": 2.5, "wind_dir_deg": 225, "rain_mm": 12.4, "uv": 1.5, "rssi": -10.0})
+    assert a.device_id == b.device_id
+    m.merge(a)
+    t[0] = 12
+    r = m.merge(b)
+    assert r.values == {"temperature": 7.1, "humidity": 81.0, "rssi": -10.0, "wind_gust": 18.0,
+                        "wind_speed": 9.0, "wind_direction": 225.0, "rain": 12.4, "uv_index": 1.5}
+    t[0] = 1000                                   # temp/hum frames stopped arriving long ago
+    r = m.merge(parse_event({"model": "Bresser-6in1", "id": 0x1234ABCD, "channel": 0, "wind_avg_m_s": 1.0}))
+    assert "temperature" not in r.values and r.values["wind_speed"] == 3.6

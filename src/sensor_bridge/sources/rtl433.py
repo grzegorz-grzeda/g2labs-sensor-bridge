@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 
 from ..model import Reading
 from .base import Emit, Source
@@ -24,6 +25,10 @@ FIELD_MAP = {
     "pressure_hPa": ("pressure", float),
     "wind_avg_km_h": ("wind_speed", float),
     "wind_avg_m_s": ("wind_speed", lambda v: round(float(v) * 3.6, 1)),
+    "wind_max_km_h": ("wind_gust", float),
+    "wind_max_m_s": ("wind_gust", lambda v: round(float(v) * 3.6, 1)),
+    "wind_dir_deg": ("wind_direction", float),
+    "uv": ("uv_index", float),
     "rain_mm": ("rain", float),
     "rssi": ("rssi", float),
 }
@@ -69,12 +74,34 @@ def parse_event(ev: dict, learner: Learner | None = None) -> Reading | None:
     )
 
 
+class FrameMerger:
+    """Many weather stations (e.g. Bresser 5/6/7-in-1) alternate message types: one frame carries
+    temperature/humidity, the next one wind/rain. Keep the last value of every metric per device and
+    emit the union, so HA always gets complete state. Values older than `max_age` are dropped."""
+
+    def __init__(self, max_age: float = 900, clock=time.monotonic):
+        self.max_age = max_age
+        self.clock = clock
+        self._cache: dict[str, dict[str, tuple[float, float]]] = {}
+
+    def merge(self, r: Reading) -> Reading:
+        now = self.clock()
+        cache = self._cache.setdefault(r.device_id, {})
+        for k, v in r.values.items():
+            cache[k] = (v, now)
+        for k in [k for k, (_, ts) in cache.items() if now - ts > self.max_age]:
+            del cache[k]
+        r.values = {k: v for k, (v, _) in cache.items()}
+        return r
+
+
 class Rtl433Source(Source):
     type = "rtl433"
 
     def __init__(self, cfg: dict, names: dict[str, str] | None = None):
         super().__init__(cfg, names)
         self.command = cfg.get("command", ["rtl_433", "-C", "si", "-F", "json", "-M", "level"])
+        self.merger = FrameMerger(float(cfg.get("merge_max_age", 900)))
         self.learner = Learner(
             self.names,
             relearn_after=float(cfg.get("relearn_after", 300)),
@@ -109,7 +136,7 @@ class Rtl433Source(Source):
                     except (ValueError, TypeError):
                         continue
                     if r:
-                        emit(r)
+                        emit(self.merger.merge(r))
                         backoff = 1
             finally:
                 stop_task.cancel()

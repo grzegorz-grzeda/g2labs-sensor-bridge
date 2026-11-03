@@ -13,6 +13,9 @@ only_named = false            # true = ignore devices not listed in [devices.nam
 type = "rtl433"               # EXPERIMENTAL, needs rtl_433 + RTL-SDR dongle
 enabled = false
 command = ["rtl_433", "-C", "si", "-F", "json", "-M", "level"]
+# 868 MHz FSK stations, e.g. Bresser 5/6/7-in-1 (also sold as Sencor SWS 9300):
+# command = ["rtl_433", "-C", "si", "-F", "json", "-M", "level", "-f", "868.3M", "-s", "1024k"]
+merge_max_age = 900           # [s] stations alternating frame types: keep last value of each metric this long
 only_named = true             # 433 MHz is full of neighbours' sensors
 relearn_after = 300           # [s] learn mode: follow a new id after the bound one is silent this long
 state_file = "/var/lib/sensor-bridge/rtl433_bindings.json"   # learned id bindings
@@ -55,4 +58,5 @@ min_interval = 30             # [s] max one publish per device per this period
 "A4:C1:38:00:00:01" = "Salon"
 "A4:C1:38:00:00:02" = "Sypialnia"
 # "Nexus-TH/*/1" = "Na zewnątrz"
+# "Bresser-6in1/*/0" = "Stacja pogodowa"
 # "Acurite-Tower/12345/A" = "Balkon"

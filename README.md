@@ -17,7 +17,7 @@ A small daemon that collects readings from home sensors over various radios and 
 |---|---|---|
 | `ble` / decoder `atc` | Xiaomi LYWSD03MMC with **ATC1441** or **pvvx (custom)** firmware | ✅ |
 | `system` | the machine the bridge runs on: CPU temperature, CPU usage, memory, disk usage | ✅ |
-| `rtl433` | anything [rtl_433](https://github.com/merbanan/rtl_433) decodes that reports temperature / humidity / pressure / wind / rain | 🧪 experimental |
+| `rtl433` | anything [rtl_433](https://github.com/merbanan/rtl_433) decodes that reports temperature / humidity / pressure / wind (speed, gust, direction) / rain / UV, e.g. Bresser 6-in-1 (= Sencor SWS 9300, 868.3 MHz) | 🧪 experimental |
 
 Many cheap 433 MHz transmitters pick a new random id on every battery change. Name them as
 `"Model/*/channel"` in `[devices.names]` and the bridge pairs with the first id heard on that channel,

@@ -15,6 +15,7 @@ typically runs on a different Linux machine that has the radios.
   - `decoders/` – pure functions `decode(address, service_data, manufacturer_data) -> Reading | None`;
     **no bleak import** so they are unit-testable. Registered in `decoders/__init__.py:BLE_DECODERS`.
   - `rtl433.py` – runs `rtl_433 -F json` subprocess, maps JSON fields via `FIELD_MAP` (experimental, untested on HW).
+    `FrameMerger` keeps the last value of each metric per device (stations alternating frame types).
   - `rtl433_learn.py` – learn mode for ids re-randomised on battery change: `"Model/*/ch"` names keys are
     slots with stable device_id `rtl433_<model>_ch<ch>`; bound id persisted in `state_file`. Sources get
     the raw `[devices.names]` dict as their second constructor argument.
